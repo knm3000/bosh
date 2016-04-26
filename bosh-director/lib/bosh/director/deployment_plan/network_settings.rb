@@ -22,12 +22,21 @@ module Bosh::Director::DeploymentPlan
       @desired_reservations.each do |reservation|
         network_name = reservation.network.name
         network_settings[network_name] = reservation.network.network_settings(reservation, default_properties[network_name], @availability_zone)
-        # Somewhat of a hack: for dynamic networks we might know IP address, Netmask & Gateway
-        # if they're featured in agent state, in that case we put them into network spec to satisfy
-        # ConfigurationHasher in both agent and director.
-        if @current_networks.is_a?(Hash) && @current_networks[network_name].is_a?(Hash) && network_settings[network_name]['type'] == 'dynamic'
-          %w(ip netmask gateway).each do |key|
-            network_settings[network_name][key] = @current_networks[network_name][key] unless @current_networks[network_name][key].nil?
+
+        if network_settings[network_name]['type'] == 'dynamic'
+          # Somewhat of a hack: for dynamic networks we might know IP address, Netmask & Gateway
+          # if they're featured in agent state, in that case we put them into network spec to satisfy
+          # ConfigurationHasher in both agent and director.
+          if @current_networks.is_a?(Hash) && @current_networks[network_name].is_a?(Hash)
+            %w(ip netmask gateway).each do |key|
+              network_settings[network_name][key] = @current_networks[network_name][key] unless @current_networks[network_name][key].nil?
+            end
+          else
+            # Templates may get rendered before we know dynamic IPs from the Agent.
+            # Use realistic IP information so that templates don't have to write conditionals around nil values.
+            %w(ip netmask gateway).each do |key|
+              network_settings[network_name][key] = '127.0.0.1'
+            end
           end
         end
       end
