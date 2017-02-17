@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative '../spec_helper'
 
 describe 'vm resurrection', type: :integration do
   with_reset_sandbox_before_each
@@ -22,5 +22,18 @@ describe 'vm resurrection', type: :integration do
     expect(instance_after_with_index_0.resurrection).to eq('paused')
     expect(instance_after_with_index_1.resurrection).to eq('paused')
     expect(instance_after_with_index_2.resurrection).to eq('active')
+  end
+
+  it 'reports global resurrection status' do
+    out = bosh_runner.run("env")
+    expect(out).to include("resurrection_paused: disabled")
+    out = bosh_runner.run("update-resurrection off")
+    expect(out).to include("Succeeded")
+    out = bosh_runner.run("env")
+    expect(out).to include("resurrection_paused: enabled")
+    out = bosh_runner.run("update-resurrection on")
+    expect(out).to include("Succeeded")
+    out = bosh_runner.run("env")
+    expect(out).to include("resurrection_paused: disabled")
   end
 end

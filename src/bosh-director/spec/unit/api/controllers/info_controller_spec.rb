@@ -80,6 +80,9 @@ module Bosh::Director
               'extras' => {
                 'urls' => []
               }
+            },
+            'resurrection_paused' => {
+              'status' => false
             }
           }
         }
@@ -165,6 +168,22 @@ module Bosh::Director
               'urls' => ['https://config.example.com']
             }
           )
+        end
+      end
+
+      context 'when setting global resurrection' do
+        it 'reports that global resurrection is enabled' do
+          allow(Bosh::Director::Models::DirectorAttribute).to receive(:get_attribute).with('resurrection_paused').and_return(false)
+          get '/'
+          response_hash = JSON.parse(last_response.body)
+          expect(response_hash['features']['resurrection_paused']).to eq('status' => false)
+        end
+
+        it 'reports that global resurrection is disabled' do
+          allow(Bosh::Director::Models::DirectorAttribute).to receive(:get_attribute).with('resurrection_paused').and_return(true)
+          get '/'
+          response_hash = JSON.parse(last_response.body)
+          expect(response_hash['features']['resurrection_paused']).to eq('status' => true)
         end
       end
     end

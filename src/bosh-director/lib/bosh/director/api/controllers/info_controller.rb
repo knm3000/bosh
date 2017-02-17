@@ -32,6 +32,9 @@ module Bosh::Director
               'extras' => {
                 'urls' => @config.config_server_urls
               }
+            },
+            'resurrection_paused' => {
+              'status' => Models::DirectorAttribute.get_attribute('resurrection_paused')
             }
           }
         }
